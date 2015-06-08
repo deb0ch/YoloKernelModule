@@ -5,7 +5,7 @@
 ** Login   <chauvo_t@epitech.net>
 **
 ** Started on  Fri Jun  5 19:51:27 2015 chauvo_t
-** Last update Fri Jun  5 21:39:16 2015 chauvo_t
+** Last update Mon Jun  8 17:09:24 2015 chauvo_t
 */
 
 #include <linux/backing-dev.h>
@@ -27,12 +27,12 @@ static void __exit	yolo_exit(void);
 
 static const struct file_operations yolo_fops = {
 	.owner		= THIS_MODULE,
-     /* .llseek		= no_llseek, */
+	/* .llseek		= no_llseek, */
 	.read		= yolo_read,
-     /* .write		= yolo_write, */
-     /* .unlocked_ioctl	= yolo_ioctl, */
-     /* .open		= yolo_open, */
-     /* .release	= yolo_close, */
+	/* .write		= yolo_write, */
+	/* .unlocked_ioctl	= yolo_ioctl, */
+	/* .open		= yolo_open, */
+	/* .release	= yolo_close, */
 };
 
 static struct miscdevice yolo_dev = {
@@ -65,7 +65,7 @@ static int __init yolo_init(void)
  * ppos: cursor position
  */
 static ssize_t yolo_read(struct file *file, char *buf,
-			  size_t count, loff_t *ppos)
+			 size_t count, loff_t *ppos)
 {
 	int	len;
 
