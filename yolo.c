@@ -5,7 +5,7 @@
 ** Login   <chauvo_t@epitech.net>
 **
 ** Started on  Fri Jun  5 19:51:27 2015 chauvo_t
-** Last update Mon Jun  8 17:09:24 2015 chauvo_t
+** Last update Sun Oct 25 20:42:46 2015 chauvo_t
 */
 
 #include <linux/backing-dev.h>
@@ -18,21 +18,27 @@
 
 #define YOLO_BUF_SIZE 64
 
-static char	yolo_buf[YOLO_BUF_SIZE] = "Yolo, World !\n";
+#define YOLO_VERSION_MODIFIED 0
+#define YOLO_VERSION_RESET 1
+
+static char	yolo_buf[YOLO_BUF_SIZE];
+static int	yolo_modified = 0;
 
 static int __init	yolo_init(void);
-static ssize_t		yolo_read(struct file *file, char *buf,
+static long		yolo_ioctl(struct file *filp,
+				   unsigned int ioctl, unsigned long arg);
+static ssize_t		yolo_write(struct file *file, const char __user *buf,
+				   size_t count, loff_t *ppos);
+static ssize_t		yolo_read(struct file *file, char __user *buf,
 				  size_t count, loff_t *ppos);
 static void __exit	yolo_exit(void);
 
 static const struct file_operations yolo_fops = {
 	.owner		= THIS_MODULE,
-	/* .llseek		= no_llseek, */
 	.read		= yolo_read,
-	/* .write		= yolo_write, */
-	/* .unlocked_ioctl	= yolo_ioctl, */
-	/* .open		= yolo_open, */
-	/* .release	= yolo_close, */
+	.write		= yolo_write,
+	.unlocked_ioctl	= yolo_ioctl,
+	.compat_ioctl	= yolo_ioctl
 };
 
 static struct miscdevice yolo_dev = {
@@ -41,8 +47,15 @@ static struct miscdevice yolo_dev = {
 	&yolo_fops
 };
 
+static void yolo_init_contents(void)
+{
+	snprintf(yolo_buf, YOLO_BUF_SIZE,
+		 "%s\n",
+		 utsname()->version);
+}
+
 /*
- * Create the "hello" device in the /sys/class/misc directory.
+ * Create the "yolo" device in the /sys/class/misc directory.
  * Udev will automatically create the /dev/hello device using
  * the default rules.
  */
@@ -54,17 +67,69 @@ static int __init yolo_init(void)
 		pr_err("Unable to register \"yolo\" misc device\n");
 		return ret;
 	}
-	snprintf(yolo_buf, YOLO_BUF_SIZE,
-		 "%s\n",
-		 utsname()->version);
+	yolo_init_contents();
 	pr_info("Yolo module properly initialized !\n");
 	return ret;
+}
+
+static int yolo_ioctl_version_modified(void)
+{
+	return yolo_modified;
+}
+
+static void yolo_ioctl_version_reset(void)
+{
+	yolo_init_contents();
+	yolo_modified = 0;
+}
+
+static long yolo_ioctl(struct file *filp,
+		       unsigned int ioctl, unsigned long arg)
+{
+	long r = -EINVAL;
+
+	switch (ioctl) {
+	case YOLO_VERSION_MODIFIED:
+		return yolo_ioctl_version_modified();
+		break;
+	case YOLO_VERSION_RESET:
+		yolo_ioctl_version_reset();
+		r = 0;
+		break;
+	default:
+		goto out;
+	}
+out:
+	return r;
 }
 
 /*
  * ppos: cursor position
  */
-static ssize_t yolo_read(struct file *file, char *buf,
+static ssize_t yolo_write(struct file *file, const char __user *buf,
+			  size_t count, loff_t *ppos)
+{
+	int	max_len;
+
+	max_len = YOLO_BUF_SIZE - 1;
+	if (*ppos >= max_len)
+		return 0;
+	if (count > max_len)
+		count = max_len;
+	if (count + *ppos > max_len)
+		count = max_len - *ppos;
+	yolo_modified = 1;
+	if (copy_from_user(yolo_buf, buf, count))
+		return -EINVAL;
+	yolo_buf[count] = '\0';
+	*ppos += count;
+	return count;
+}
+
+/*
+ * ppos: cursor position
+ */
+static ssize_t yolo_read(struct file *file, char __user *buf,
 			 size_t count, loff_t *ppos)
 {
 	int	len;
