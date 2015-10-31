@@ -5,7 +5,7 @@
 ** Login   <chauvo_t@epitech.net>
 **
 ** Started on  Fri Jun  5 19:51:27 2015 chauvo_t
-** Last update Sun Oct 25 20:42:46 2015 chauvo_t
+** Last update Sat Oct 31 17:54:41 2015 chauvo_t
 */
 
 #include <linux/backing-dev.h>
@@ -16,22 +16,10 @@
 #include <linux/uaccess.h>
 #include <linux/utsname.h>
 
-#define YOLO_BUF_SIZE 64
-
-#define YOLO_VERSION_MODIFIED 0
-#define YOLO_VERSION_RESET 1
+#include "yolo.h"
 
 static char	yolo_buf[YOLO_BUF_SIZE];
 static int	yolo_modified = 0;
-
-static int __init	yolo_init(void);
-static long		yolo_ioctl(struct file *filp,
-				   unsigned int ioctl, unsigned long arg);
-static ssize_t		yolo_write(struct file *file, const char __user *buf,
-				   size_t count, loff_t *ppos);
-static ssize_t		yolo_read(struct file *file, char __user *buf,
-				  size_t count, loff_t *ppos);
-static void __exit	yolo_exit(void);
 
 static const struct file_operations yolo_fops = {
 	.owner		= THIS_MODULE,
